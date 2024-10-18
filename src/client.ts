@@ -21,7 +21,9 @@ async function fetchMessage() {
   await new Promise((resolve) => setTimeout(resolve, 2000));
 
   try {
-    const response = await fetch("http://127.0.0.1:8080/data");
+    const response = await fetch(
+      "https://web2-projekt-1-10ez.onrender.com/data"
+    );
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
