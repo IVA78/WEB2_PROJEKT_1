@@ -1,10 +1,8 @@
 import express, { Request, Response } from "express";
-import fs from "fs";
 import path from "path";
-import https from "https";
 import dotenv from "dotenv";
-import { Client, Pool, PoolClient } from "pg";
 import cors from "cors";
+import { Pool, PoolClient } from "pg";
 
 //konfiguracija env
 dotenv.config({
@@ -12,11 +10,12 @@ dotenv.config({
 });
 console.log("dirname: ", __dirname);
 
-//konfiguracija mikroservisne aplikacije (server)
+//konfiguracija aplikacije
 const app = express();
-const port = 8080;
+const port = process.env.PORT || 3000;
 app.use(cors());
 
+//konfiguracija baze
 const pool = new Pool({
   connectionString: process.env.DB_URL,
   ssl: {
@@ -24,13 +23,18 @@ const pool = new Pool({
   },
 });
 
-//definiranje osnovne rute
-app.get("/api", (req: Request, res: Response) => {
-  res.send("Zdravo, ovo je osnovna ruta!");
+//postavljanje direktorija za staticke datoteke
+app.use(express.static(path.join(__dirname, "./public")));
+app.set("views", path.join(__dirname, "views"));
+app.set("view engine", "pug");
+
+//definiranje osnovne rute za posluzivanje pocetne stranice
+app.get("/", (req: Request, res: Response) => {
+  res.render("index");
 });
 
 //definiranje rute za prikaz podataka
-app.get("/api/data", (req: Request, res: Response) => {
+app.get("/data", (req: Request, res: Response) => {
   const exampleData = {
     message: "Ovo je neki podatak",
     value: 33,
@@ -56,7 +60,7 @@ async function connect(): Promise<PoolClient | null> {
 }
 connect();
 
-//pokretanje  mikroservisne aplikacije (server)
+//pokretanje klijentskog servera
 app.listen(port, () => {
-  console.log(`Server je pokrenut!`);
+  console.log(`Klijentski server je pokrenut!`);
 });

@@ -9,9 +9,7 @@
     "copy-views": "shx cp -r src/views/ dist",
     "copy-public": "shx cp -r src/public/ dist/public",
     "copy-env": "shx cp -r src/environments/ dist/environments",
-    "start": "concurrently --kill-others \"npm:client\" \"npm:web-service\"",
-    "client": "node dist/client.js",
-    "web-service": "node dist/web-service.js"
+    "start": "node dist/server.js"
   },
   "keywords": [],
   "author": "",
