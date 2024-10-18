@@ -1,9 +1,16 @@
 import express, { Request, Response } from "express";
 import path from "path";
+import dotenv from "dotenv";
+
+//konfiguracija env
+dotenv.config({
+  path: path.join(__dirname, "environments/.env.development"),
+});
+console.log("dirname: ", __dirname);
 
 //konfiguracije klijentske aplikacije
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 //postavljanje direktorija za staticke datoteke
 app.use(express.static(path.join(__dirname, "./public")));
@@ -18,7 +25,7 @@ app.get("/", (req: Request, res: Response) => {
 //dohvat poruke sa backenda
 async function fetchMessage() {
   // Delay for 2 seconds before trying to fetch
-  await new Promise((resolve) => setTimeout(resolve, 2000));
+  await new Promise((resolve) => setTimeout(resolve, 5000));
 
   try {
     const response = await fetch(

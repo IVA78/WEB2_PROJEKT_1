@@ -6,17 +6,16 @@ import dotenv from "dotenv";
 import { Client, Pool, PoolClient } from "pg";
 import cors from "cors";
 
-//konfiguracija mikroservisne aplikacije (server)
-const app = express();
-const hostname = "127.0.0.1";
-const port = 8080;
-app.use(cors());
-
-//konfiguracija baze podataka
+//konfiguracija env
 dotenv.config({
   path: path.join(__dirname, "environments/.env.development"),
 });
 console.log("dirname: ", __dirname);
+
+//konfiguracija mikroservisne aplikacije (server)
+const app = express();
+const port = process.env.PORT || 8080;
+app.use(cors());
 
 const pool = new Pool({
   connectionString: process.env.DB_URL,
@@ -24,7 +23,6 @@ const pool = new Pool({
     rejectUnauthorized: false, // Set to true in production for security
   },
 });
-console.log("database: ", process.env.DATABASE);
 
 //definiranje osnovne rute
 app.get("/api", (req: Request, res: Response) => {
