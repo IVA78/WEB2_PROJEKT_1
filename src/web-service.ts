@@ -4,6 +4,7 @@ import path from "path";
 import https from "https";
 import dotenv from "dotenv";
 import { Client, Pool, PoolClient } from "pg";
+import { Sequelize } from "sequelize";
 
 //konfiguracija mikroservisne aplikacije (server)
 const app = express();
@@ -17,11 +18,10 @@ dotenv.config({
 console.log("dirname: ", __dirname);
 
 const pool = new Pool({
-  user: process.env.USER as string,
-  host: process.env.HOST as string,
-  database: process.env.DATABASE as string,
-  password: process.env.PASSWORD as string,
-  port: parseInt(process.env.PORT as string, 10),
+  connectionString: process.env.DB_URL,
+  ssl: {
+    rejectUnauthorized: false, // Set to true in production for security
+  },
 });
 console.log("database: ", process.env.DATABASE);
 
