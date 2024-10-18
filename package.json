@@ -4,10 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "npm run clean && tsc && npm run copy-views && npm run copy-public",
+    "build": "npm run clean && tsc && npm run copy-views && npm run copy-public && npm run copy-env",
     "clean": "shx rm -rf dist",
     "copy-views": "shx cp -r src/views/ dist",
     "copy-public": "shx cp -r src/public/ dist/public",
+    "copy-env": "shx cp -r src/environments/ dist/environments",
     "start": "concurrently --kill-others \"npm:client\" \"npm:web-service\"",
     "client": "node dist/client.js",
     "web-service": "node dist/web-service.js"
@@ -18,6 +19,7 @@
   "devDependencies": {
     "@types/express": "^5.0.0",
     "@types/node": "^22.7.5",
+    "@types/pg": "^8.11.10",
     "concurrently": "^9.0.1",
     "typescript": "^5.6.3"
   },
@@ -25,10 +27,12 @@
     "axios": "^1.7.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
+    "env": "^0.0.2",
     "express": "^4.21.1",
     "fs": "^0.0.1-security",
     "https": "^1.0.0",
     "path": "^0.12.7",
+    "pg": "^8.13.0",
     "pug": "^3.0.3",
     "shx": "^0.3.4"
   }
