@@ -22,7 +22,7 @@ async function fetchMessage() {
 
   try {
     const response = await fetch(
-      "https://web2-projekt-1-10ez.onrender.com/data"
+      "https://web2-projekt-1-10ez.onrender.com/api/data"
     );
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);

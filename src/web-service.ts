@@ -27,12 +27,12 @@ const pool = new Pool({
 console.log("database: ", process.env.DATABASE);
 
 //definiranje osnovne rute
-app.get("/", (req: Request, res: Response) => {
+app.get("/api", (req: Request, res: Response) => {
   res.send("Zdravo, ovo je osnovna ruta!");
 });
 
 //definiranje rute za prikaz podataka
-app.get("/data", (req: Request, res: Response) => {
+app.get("/api/data", (req: Request, res: Response) => {
   const exampleData = {
     message: "Ovo je neki podatak",
     value: 33,
