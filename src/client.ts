@@ -15,6 +15,25 @@ app.get("/", (req: Request, res: Response) => {
   res.render("index");
 });
 
+//dohvat poruke sa backenda
+async function fetchMessage() {
+  // Delay for 2 seconds before trying to fetch
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+
+  try {
+    const response = await fetch("http://127.0.0.1:8080/data");
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    const data = await response.json();
+    console.log(data.message);
+  } catch (error) {
+    console.error("Error fetching message:", error);
+  }
+}
+
+fetchMessage();
+
 //pokretanje klijentskog servera
 app.listen(port, () => {
   console.log(`Klijentski server je pokrenut na http://localhost:${port}/`);

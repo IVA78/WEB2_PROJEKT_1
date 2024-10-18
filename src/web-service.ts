@@ -4,12 +4,13 @@ import path from "path";
 import https from "https";
 import dotenv from "dotenv";
 import { Client, Pool, PoolClient } from "pg";
-import { Sequelize } from "sequelize";
+import cors from "cors";
 
 //konfiguracija mikroservisne aplikacije (server)
 const app = express();
 const hostname = "127.0.0.1";
 const port = 8080;
+app.use(cors());
 
 //konfiguracija baze podataka
 dotenv.config({
