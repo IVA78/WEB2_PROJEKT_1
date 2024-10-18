@@ -59,6 +59,6 @@ async function connect(): Promise<PoolClient | null> {
 connect();
 
 //pokretanje  mikroservisne aplikacije (server)
-app.listen(port, hostname, () => {
-  console.log(`Server je pokrenut na http://${hostname}:${port}`);
+app.listen(port, () => {
+  console.log(`Server je pokrenut!`);
 });

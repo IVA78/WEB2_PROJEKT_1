@@ -38,5 +38,5 @@ fetchMessage();
 
 //pokretanje klijentskog servera
 app.listen(port, () => {
-  console.log(`Klijentski server je pokrenut na http://localhost:${port}/`);
+  console.log(`Klijentski server je pokrenut!`);
 });
