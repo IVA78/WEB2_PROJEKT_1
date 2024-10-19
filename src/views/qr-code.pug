@@ -1,0 +1,11 @@
+doctype html
+html
+  head
+    title QR code generator
+    link(rel='stylesheet', href='/css/style.css')
+  body
+    h1 Your QR Code
+    img(src=`data:image/png;base64,${qrCode}`, alt="QR Code")
+    p Scan this QR code for ticket information.
+    
+    script(src='/js/script.js')
