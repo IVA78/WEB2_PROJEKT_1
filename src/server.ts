@@ -253,8 +253,9 @@ app.get("/data", (req: Request, res: Response) => {
   res.json(exampleData);
 });
 
-//pokretanje klijentskog servera
-https
+//pokretanje klijentskog servera lokalno
+/**
+ https
   .createServer(
     {
       key: fs.readFileSync("server.key"),
@@ -262,6 +263,8 @@ https
     },
     app
   )
-  .listen(port, () => {
-    console.log(`Klijentski server je pokrenut!`);
-  });
+ */
+//pokretanje klijentskog servera na renderu
+app.listen(port, () => {
+  console.log(`Klijentski server je pokrenut!`);
+});
