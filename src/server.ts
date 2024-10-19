@@ -1,9 +1,14 @@
-import express, { Request, Response } from "express";
+import express, { NextFunction, Request, Response } from "express";
 import path from "path";
 import dotenv from "dotenv";
 import cors from "cors";
 import { Pool, PoolClient, QueryResult } from "pg";
 import { BIGINT } from "sequelize";
+import axios from "axios";
+import { auth } from "express-oauth2-jwt-bearer";
+import https from "https";
+import fs from "fs";
+import request from "request";
 
 //konfiguracija env
 dotenv.config({
@@ -94,6 +99,44 @@ async function getNumberOfTickets(): Promise<number | null> {
   }
 }
 
+//definiranje sucelja koje prosiruje Request
+interface CustomRequest extends Request {
+  firstFunctionData?: any; // dodavanje novog propertyja
+}
+
+//Client Credentials Flow sa OAuth2
+const clientCredentialsFlow = async function (
+  req: CustomRequest,
+  res: Response,
+  next: NextFunction
+): Promise<string | any> {
+  //dobijanje access tokena
+  try {
+    const response = await axios.post(
+      `${process.env.AUTH_SERVER}/oauth/token`,
+      {
+        audience: process.env.AUDIENCE,
+        grant_type: process.env.GRANT_TYPE,
+        client_id: process.env.CLIENT_ID,
+        client_secret: process.env.CLIENT_SECRET,
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    req.firstFunctionData = response;
+    next();
+  } catch (error) {
+    console.error(
+      "Error fetching access token:",
+      error.response ? error.response.data : error.message
+    );
+    return res.status(500).json({ message: "Failed to obtain access token" });
+  }
+};
+
 //definiranje osnovne rute za posluzivanje pocetne stranice
 app.get("/", async (req: Request, res: Response) => {
   try {
@@ -111,6 +154,25 @@ app.get("/", async (req: Request, res: Response) => {
   }
 });
 
+//pristupna tocka za generiranje ulaznice
+app.post(
+  "/generate-ticket",
+  clientCredentialsFlow,
+  async (req: CustomRequest, res: Response) => {
+    try {
+      //kontrolni ispis dobivenog tokena
+      console.log("Token: ", req.firstFunctionData.data.access_token);
+
+      //generiranje ulaznice
+      console.log("Generiram ulaznicu!");
+    } catch (error) {
+      res
+        .status(500)
+        .json({ message: "An error occurred while generating the ticket" });
+    }
+  }
+);
+
 //definiranje rute za prikaz podataka
 app.get("/data", (req: Request, res: Response) => {
   const exampleData = {
@@ -121,6 +183,14 @@ app.get("/data", (req: Request, res: Response) => {
 });
 
 //pokretanje klijentskog servera
-app.listen(port, () => {
-  console.log(`Klijentski server je pokrenut!`);
-});
+https
+  .createServer(
+    {
+      key: fs.readFileSync("server.key"),
+      cert: fs.readFileSync("server.cert"),
+    },
+    app
+  )
+  .listen(port, () => {
+    console.log(`Klijentski server je pokrenut!`);
+  });

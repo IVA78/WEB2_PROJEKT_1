@@ -7,7 +7,7 @@ html
     h1 Welcome to ticket QR code generator!
     p Number of generated tickets: #{ticketCount} 
     h3 Enter your information.
-    form(action='/generate-tickets', method='POST')
+    form(action='/generate-ticket', method='POST')
       div
         label(for='OIB') OIB:
         input(type='text', id='OIB', name='OIB', required)
