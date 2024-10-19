@@ -6,7 +6,6 @@ import { Pool, PoolClient, QueryResult } from "pg";
 import { BIGINT } from "sequelize";
 import axios from "axios";
 import { auth } from "express-oauth2-jwt-bearer";
-import https from "https";
 import fs from "fs";
 import request from "request";
 import { v4 as uuidv4 } from "uuid";
@@ -266,5 +265,5 @@ app.get("/data", (req: Request, res: Response) => {
  */
 //pokretanje klijentskog servera na renderu
 app.listen(port, () => {
-  console.log(`Klijentski server je pokrenut!`);
+  console.log(`Klijentski server je pokrenut, port: ${port}!`);
 });
