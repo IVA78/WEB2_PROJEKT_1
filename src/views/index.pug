@@ -1,12 +1,12 @@
 doctype html
 html
   head
-    title My Web App
+    title QR code generator
     link(rel='stylesheet', href='/css/style.css')
   body
-    h1 Welcome to My Web App
-    p This is a paragraph in the web app.
-    p Number of tickets: #{ticketCount} 
+    h1 Welcome to ticket QR code generator!
+    p Number of generated tickets: #{ticketCount} 
+    a.btn(href='/generate-tickets', class='button') Generate ticket
 
     
     script(src='/js/script.js')
