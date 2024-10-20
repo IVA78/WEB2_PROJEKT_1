@@ -5,11 +5,15 @@ import cors from "cors";
 import { Pool, PoolClient, QueryResult } from "pg";
 import { BIGINT } from "sequelize";
 import axios from "axios";
-import { auth } from "express-oauth2-jwt-bearer";
 import fs from "fs";
 import request from "request";
 import { v4 as uuidv4 } from "uuid";
 import QRCode from "qrcode";
+import { auth, requiresAuth } from "express-openid-connect";
+import { UUID } from "crypto";
+
+//definiranje porta
+const port = process.env.PORT || 3000;
 
 //konfiguracija env
 dotenv.config({
@@ -17,11 +21,26 @@ dotenv.config({
 });
 console.log("dirname: ", __dirname);
 
+//konfiguracija za autentifikaciju
+const config = {
+  authRequired: false,
+  idpLogout: true,
+  secret: process.env.SECRET,
+  baseURL: `https://web2-projekt-1-10ez.onrender.com`, //PROMIJENITI KOD DEPLOYA
+  clientID: process.env.CLIENT_ID,
+  issuerBaseURL: process.env.AUTH_SERVER,
+  clientSecret: process.env.CLIENT_SECRET,
+  authorizationParams: {
+    response_type: "code",
+    //scope: "openid profile email"
+  },
+};
+
 //konfiguracija aplikacije
 const app = express();
-const port = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
+app.use(auth(config));
 
 //konfiguracija baze
 const pool = new Pool({
@@ -221,7 +240,9 @@ app.post(
             const base64QRCode = qrCodeImage.toString("base64");
 
             // slanje qr koda u pug template koji ce se renderirati
-            res.render("qr-code", { qrCode: base64QRCode });
+            res.render("qr-code", {
+              qrCode: base64QRCode,
+            });
           } catch (error) {
             console.error("Error generating QR code:", error);
             res.status(500).json({
@@ -239,9 +260,40 @@ app.post(
 );
 
 //stranica koja pokazuje podatke o ulaznici prijavljenim korisnicima
-app.get("/ticket/:ticketId", async (req: Request, res: Response) => {
-  res.status(200).json({ message: "All good!" });
-});
+app.get(
+  "/ticket/:ticketId",
+  requiresAuth(),
+  async (req: Request, res: Response) => {
+    const user = JSON.stringify(req.oidc.user);
+    const userName = req.oidc.user?.name ?? req.oidc.user?.sub;
+
+    //fetch ticket info
+    const ticket_id = req.params.ticketId;
+    const queryText1 = "SELECT * FROM ticket WHERE ticket_id = $1";
+    const params1 = [ticket_id];
+    const result1 = await connect(queryText1, params1);
+
+    const owner_oib = result1 ? result1.rows[0].owner_oib : 0;
+    const created_at = result1 ? result1.rows[0].created_at : 0;
+
+    //fetch owner info
+    const queryText2 = `SELECT * FROM ticket_owner WHERE vatin = $1`;
+    const params2 = [owner_oib];
+    const result2 = await connect(queryText2, params2);
+    const firstName = result2 ? result2.rows[0].firstname : 0;
+    const lastName = result2 ? result2.rows[0].lastname : 0;
+    //console.log("userinfo: ", firstName, lastName);
+    //console.log(result2);
+
+    res.render("ticket-info", {
+      userName,
+      owner_oib,
+      firstName,
+      lastName,
+      created_at,
+    });
+  }
+);
 
 //definiranje rute za prikaz podataka
 app.get("/data", (req: Request, res: Response) => {
@@ -253,8 +305,9 @@ app.get("/data", (req: Request, res: Response) => {
 });
 
 //pokretanje klijentskog servera lokalno
-/**
- https
+
+/*
+https
   .createServer(
     {
       key: fs.readFileSync("server.key"),
@@ -262,8 +315,13 @@ app.get("/data", (req: Request, res: Response) => {
     },
     app
   )
+  .listen(port, () => {
+    console.log(`Klijentski server je pokrenut, port: ${port}!`);
+  });
  */
+
 //pokretanje klijentskog servera na renderu
+
 app.listen(port, () => {
   console.log(`Klijentski server je pokrenut, port: ${port}!`);
 });
