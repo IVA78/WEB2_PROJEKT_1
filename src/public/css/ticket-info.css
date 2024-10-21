@@ -1,0 +1,28 @@
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f8f9fa;
+  color: #333;
+  padding: 20px;
+}
+
+h3 {
+  font-size: 24px;
+  color: #4caf50;
+  margin-bottom: 10px;
+  border-bottom: 2px solid #4caf50;
+  padding-bottom: 5px;
+}
+
+h4 {
+  font-size: 18px;
+  color: #555;
+  margin-bottom: 8px;
+}
+
+h4 strong {
+  font-weight: bold;
+}
+
+body > h4:first-child {
+  margin-top: 20px;
+}

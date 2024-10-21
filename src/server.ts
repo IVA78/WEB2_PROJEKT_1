@@ -11,6 +11,7 @@ import { v4 as uuidv4 } from "uuid";
 import QRCode from "qrcode";
 import { auth, requiresAuth } from "express-openid-connect";
 import { UUID } from "crypto";
+//import https from "https";
 
 //definiranje porta
 const port = process.env.PORT || 3000;
@@ -64,7 +65,7 @@ async function connect(
   try {
     //povezivanje s bazom - dohvat instance veze
     client = await pool.connect();
-    console.log("Connected to the database successfully");
+    //console.log("Connected to the database successfully");
 
     const result = await client.query(queryText, params);
     return result;
@@ -176,6 +177,16 @@ app.get("/", async (req: Request, res: Response) => {
   }
 });
 
+app.get(
+  "/generate-ticket-form",
+  clientCredentialsFlow,
+  async (req: CustomRequest, res: Response) => {
+    //kontrolni ispis dobivenog tokena
+    //console.log("Token: ", req.firstFunctionData.data.access_token);
+    res.render("qr-code-form");
+  }
+);
+
 //pristupna tocka za generiranje ulaznice
 app.post(
   "/generate-ticket",
@@ -190,7 +201,7 @@ app.post(
 
       //dohvat podataka iz forme
       const { OIB, firstName, lastName } = req.body;
-      console.log("Received form data:", { OIB, firstName, lastName });
+      //console.log("Received form data:", { OIB, firstName, lastName });
       //provjera podataka iz forme
       if (!OIB || !firstName || !lastName) {
         res.status(400).json({
@@ -201,15 +212,17 @@ app.post(
 
       //spremi novog vlasnika ulaznice u bazu (ako vec ne postoji sa istim OIB-om)
       const queryText1 = `INSERT INTO ticket_owner (vatin, firstName, lastName)
-                         VALUES ('${OIB}', '${firstName}', '${lastName}')
+                         VALUES ($1, $2, $3)
                          ON CONFLICT (vatin) DO NOTHING;`;
-      await connect(queryText1);
+      const params1 = [OIB, firstName, lastName];
+      await connect(queryText1, params1);
 
       //provjera broja ulaznica sa istim OIB-om (max 3)
       const queryText2 = `SELECT COUNT(*)
                           FROM ticket
-                          WHERE owner_oib = '${OIB}';`;
-      const result = await connect(queryText2);
+                          WHERE owner_oib = $1;`;
+      const params2 = [OIB];
+      const result = await connect(queryText2, params2);
       const count: number = result ? parseInt(result.rows[0].count, 10) : -1;
 
       if (count != -1) {
@@ -222,12 +235,13 @@ app.post(
           //generiranje nove ulaznice
 
           const queryText3 = `INSERT INTO ticket (owner_oib)
-                              VALUES ( ${OIB})
+                              VALUES ($1)
                               RETURNING ticket_id`;
-          const result = await connect(queryText3);
+          const params3 = [OIB];
+          const result = await connect(queryText3, params3);
           const ticket_id = result ? result.rows[0].ticket_id : 0;
           const created_at = result ? result.rows[0].created_at : 0;
-          console.log(`(${ticket_id}, ${created_at}, ${OIB})`);
+          //console.log(`(${ticket_id}, ${created_at}, ${OIB})`);
 
           try {
             const ticketURL = `${req.protocol}://${req.get(
@@ -305,7 +319,6 @@ app.get("/data", (req: Request, res: Response) => {
 });
 
 //pokretanje klijentskog servera lokalno
-
 /*
 https
   .createServer(

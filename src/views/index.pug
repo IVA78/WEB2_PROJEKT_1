@@ -2,23 +2,11 @@ doctype html
 html
   head
     title QR code generator
-    link(rel='stylesheet', href='/css/style.css')
+    link(rel='stylesheet', href='/css/index.css')
   body
     h1 Welcome to ticket QR code generator!
     p Number of generated tickets: #{ticketCount} 
-    h3 Enter your information.
-    form(action='/generate-ticket', method='POST')
-      div
-        label(for='OIB') OIB:
-        input(type='text', id='OIB', name='OIB', required)
-      div
-        label(for='firstName') First name:
-        input(type='text', id='firstName', name='firstName', required)
-      div
-        label(for='lastName') Last name:
-        input(type='text', id='lastName', name='lastName', required)
-      div
-        button(type='submit' class='btn') Generate ticket
+    a.btn(href='/generate-ticket-form') Generate ticket
 
     
     script(src='/js/script.js')
