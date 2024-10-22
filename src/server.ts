@@ -11,7 +11,9 @@ import { v4 as uuidv4 } from "uuid";
 import QRCode from "qrcode";
 import { auth, requiresAuth } from "express-openid-connect";
 import { UUID } from "crypto";
-//import https from "https";
+import { expressjwt, GetVerificationKey } from "express-jwt";
+import jwksRsa from "jwks-rsa";
+import https from "https";
 
 //definiranje porta
 const port = process.env.PORT || 3000;
@@ -42,6 +44,7 @@ const app = express();
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(auth(config));
+app.use(express.json());
 
 //konfiguracija baze
 const pool = new Pool({
@@ -122,43 +125,18 @@ async function getNumberOfTickets(): Promise<number | null> {
   }
 }
 
-//definiranje sucelja koje prosiruje Request
-interface CustomRequest extends Request {
-  firstFunctionData?: any; // dodavanje novog propertyja
-}
-
-//Client Credentials Flow sa OAuth2
-const clientCredentialsFlow = async function (
-  req: CustomRequest,
-  res: Response,
-  next: NextFunction
-): Promise<string | any> {
-  //dobijanje access tokena
-  try {
-    const response = await axios.post(
-      `${process.env.AUTH_SERVER}/oauth/token`,
-      {
-        audience: process.env.AUDIENCE,
-        grant_type: process.env.GRANT_TYPE,
-        client_id: process.env.CLIENT_ID,
-        client_secret: process.env.CLIENT_SECRET,
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    req.firstFunctionData = response;
-    next();
-  } catch (error) {
-    console.error(
-      "Error fetching access token:",
-      error.response ? error.response.data : error.message
-    );
-    return res.status(500).json({ message: "Failed to obtain access token" });
-  }
-};
+//validacija JWT - middleware
+const checkJwt = expressjwt({
+  secret: jwksRsa.expressJwtSecret({
+    cache: true,
+    rateLimit: true,
+    jwksRequestsPerMinute: 5,
+    jwksUri: `${process.env.AUTH_SERVER}/.well-known/jwks.json`,
+  }) as GetVerificationKey, // Add 'as any' if you face TypeScript issues here
+  audience: process.env.AUDIENCE,
+  issuer: `${process.env.AUTH_SERVER}/`,
+  algorithms: ["RS256"],
+});
 
 //definiranje osnovne rute za posluzivanje pocetne stranice
 app.get("/", async (req: Request, res: Response) => {
@@ -177,33 +155,20 @@ app.get("/", async (req: Request, res: Response) => {
   }
 });
 
-app.get(
-  "/generate-ticket-form",
-  clientCredentialsFlow,
-  async (req: CustomRequest, res: Response) => {
-    //kontrolni ispis dobivenog tokena
-    //console.log("Token: ", req.firstFunctionData.data.access_token);
-    res.render("qr-code-form");
-  }
-);
-
 //pristupna tocka za generiranje ulaznice
 app.post(
   "/generate-ticket",
-  clientCredentialsFlow,
-  async (req: CustomRequest, res: Response) => {
+  checkJwt as express.RequestHandler,
+  async (req: Request, res: Response) => {
     try {
-      //kontrolni ispis dobivenog tokena
-      //console.log("Token: ", req.firstFunctionData.data.access_token);
-
       //generiranje ulaznice
       console.log("Generiram ulaznicu!");
 
       //dohvat podataka iz forme
-      const { OIB, firstName, lastName } = req.body;
-      //console.log("Received form data:", { OIB, firstName, lastName });
+      const { vatin, firstName, lastName } = req.body;
+      //console.log("Received form data:", { vatin, firstName, lastName });
       //provjera podataka iz forme
-      if (!OIB || !firstName || !lastName) {
+      if (!vatin || !firstName || !lastName) {
         res.status(400).json({
           message: "All fields are required: vatin, firstName, and lastName.",
         });
@@ -214,14 +179,14 @@ app.post(
       const queryText1 = `INSERT INTO ticket_owner (vatin, firstName, lastName)
                          VALUES ($1, $2, $3)
                          ON CONFLICT (vatin) DO NOTHING;`;
-      const params1 = [OIB, firstName, lastName];
+      const params1 = [vatin, firstName, lastName];
       await connect(queryText1, params1);
 
       //provjera broja ulaznica sa istim OIB-om (max 3)
       const queryText2 = `SELECT COUNT(*)
                           FROM ticket
                           WHERE owner_oib = $1;`;
-      const params2 = [OIB];
+      const params2 = [vatin];
       const result = await connect(queryText2, params2);
       const count: number = result ? parseInt(result.rows[0].count, 10) : -1;
 
@@ -237,7 +202,7 @@ app.post(
           const queryText3 = `INSERT INTO ticket (owner_oib)
                               VALUES ($1)
                               RETURNING ticket_id`;
-          const params3 = [OIB];
+          const params3 = [vatin];
           const result = await connect(queryText3, params3);
           const ticket_id = result ? result.rows[0].ticket_id : 0;
           const created_at = result ? result.rows[0].created_at : 0;
@@ -309,13 +274,23 @@ app.get(
   }
 );
 
-//definiranje rute za prikaz podataka
-app.get("/data", (req: Request, res: Response) => {
-  const exampleData = {
-    message: "Ovo je neki podatak",
-    value: 33,
-  };
-  res.json(exampleData);
+//logout
+app.get("logout", async (req: Request, res: Response) => {
+  try {
+    const response = await axios.get(
+      `https://dev-t05cvvcbx5d4cald.us.auth0.com/v2/logout`,
+      {
+        params: {
+          client_id: process.env.CLIENT_ID,
+          returnTo: `${req.get("host")}/`, // URL na koji će se preusmjeriti
+        },
+      }
+    );
+    res.redirect(`${req.get("host")}`); // Preusmjeravanje nakon logout-a
+  } catch (error) {
+    console.error("Logout failed:", error);
+    res.status(500).send("Error logging out");
+  }
 });
 
 //pokretanje klijentskog servera lokalno
