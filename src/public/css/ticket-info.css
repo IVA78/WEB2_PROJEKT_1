@@ -26,3 +26,23 @@ h4 strong {
 body > h4:first-child {
   margin-top: 20px;
 }
+
+a.logout {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 10px 15px;
+  background-color: #4caf50;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+  transition: background-color 0.3s;
+  font-size: 16px;
+}
+
+a.logout:hover {
+  background-color: #45a049;
+}
+
+a.logout:active {
+  background-color: #3e8e41;
+}
