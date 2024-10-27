@@ -1,13 +1,10 @@
-import express, { NextFunction, Request, Response } from "express";
+import express, { Request, Response } from "express";
 import path from "path";
 import dotenv from "dotenv";
 import cors from "cors";
 import { Pool, PoolClient, QueryResult } from "pg";
-import { BIGINT } from "sequelize";
 import axios from "axios";
 import fs from "fs";
-import request from "request";
-import { v4 as uuidv4 } from "uuid";
 import QRCode from "qrcode";
 import { auth, requiresAuth } from "express-openid-connect";
 import { UUID } from "crypto";
@@ -294,7 +291,7 @@ app.get("logout", async (req: Request, res: Response) => {
 });
 
 //pokretanje klijentskog servera lokalno
-/*
+
 https
   .createServer(
     {
@@ -306,10 +303,11 @@ https
   .listen(port, () => {
     console.log(`Klijentski server je pokrenut, port: ${port}!`);
   });
- */
 
 //pokretanje klijentskog servera na renderu
 
+/*
 app.listen(port, () => {
   console.log(`Klijentski server je pokrenut, port: ${port}!`);
 });
+ */
