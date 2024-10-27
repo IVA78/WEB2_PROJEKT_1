@@ -292,7 +292,8 @@ app.get("logout", async (req: Request, res: Response) => {
 
 //pokretanje klijentskog servera lokalno
 
-https
+/**
+ https
   .createServer(
     {
       key: fs.readFileSync("server.key"),
@@ -303,11 +304,10 @@ https
   .listen(port, () => {
     console.log(`Klijentski server je pokrenut, port: ${port}!`);
   });
+ */
 
 //pokretanje klijentskog servera na renderu
 
-/*
 app.listen(port, () => {
   console.log(`Klijentski server je pokrenut, port: ${port}!`);
 });
- */
